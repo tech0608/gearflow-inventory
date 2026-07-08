@@ -43,8 +43,9 @@ CREATE TABLE IF NOT EXISTS `penggunas` (
 
 INSERT INTO `penggunas` (`id`, `nama_pengguna`, `username`, `email`, `password`, `role`, `created_at`, `updated_at`) VALUES
 (1, 'Administrator Bengkel', 'admin', 'admin@garasifyy.site', '$2y$12$eOa/hTjZJbJzJ0B7W0QY.uFwP5G1q7D2e8M3k6L9vX4n1C5r8T9uO', 'admin', NOW(), NOW()),
-(2, 'Staf Operasional', 'staf', 'staf@garasifyy.site', '$2y$12$eOa/hTjZJbJzJ0B7W0QY.uFwP5G1q7D2e8M3k6L9vX4n1C5r8T9uO', 'staf', NOW(), NOW());
--- Note: Password untuk kedua akun adalah: password
+(2, 'Staf Operasional', 'staf', 'staf@garasifyy.site', '$2y$12$eOa/hTjZJbJzJ0B7W0QY.uFwP5G1q7D2e8M3k6L9vX4n1C5r8T9uO', 'staf', NOW(), NOW()),
+(3, 'Staff Bengkel', 'staff', 'staff@garasifyy.site', '$2y$12$eOa/hTjZJbJzJ0B7W0QY.uFwP5G1q7D2e8M3k6L9vX4n1C5r8T9uO', 'staf', NOW(), NOW());
+-- Note: Password untuk seluruh akun adalah: password (atau admin123 untuk admin)
 
 -- --------------------------------------------------------
 -- 3. Tabel `pemasoks`
