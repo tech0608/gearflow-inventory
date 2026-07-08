@@ -56,6 +56,8 @@ class PemasokController extends Controller
         return redirect()->route('pemasok.index')->with('success', 'Pemasok berhasil diperbarui.');
     }
 
+    public function destroy(Pemasok $pemasok)
+    {
         $nama = $pemasok->nama_pemasok;
         $pemasok->delete();
         \App\Models\ActivityLog::record('DELETE', 'Menghapus mitra pemasok: ' . $nama);
