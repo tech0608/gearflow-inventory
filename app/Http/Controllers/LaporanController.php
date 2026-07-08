@@ -11,16 +11,15 @@ class LaporanController extends Controller
     public function index(Request $request)
     {
         $tipe   = $request->get('tipe', 'all');
-        $dari   = $request->get('dari', '');
-        $sampai = $request->get('sampai', '');
+        $dari   = $request->get('dari', date('Y-m-01'));  // default: awal bulan ini
+        $sampai = $request->get('sampai', date('Y-m-d')); // default: hari ini
 
         $masuk = collect();
         $keluar = collect();
 
         if ($tipe !== 'keluar') {
             $masuk = BarangMasuk::with(['barang','pemasok'])
-                ->when($dari,   fn($q) => $q->where('tanggal_masuk', '>=', $dari))
-                ->when($sampai, fn($q) => $q->where('tanggal_masuk', '<=', $sampai))
+                ->whereBetween('tanggal_masuk', [$dari, $sampai])
                 ->orderByDesc('tanggal_masuk')->get()
                 ->map(fn($m) => [
                     'tipe'        => 'masuk',
@@ -33,8 +32,7 @@ class LaporanController extends Controller
 
         if ($tipe !== 'masuk') {
             $keluar = BarangKeluar::with('barang')
-                ->when($dari,   fn($q) => $q->where('tanggal_keluar', '>=', $dari))
-                ->when($sampai, fn($q) => $q->where('tanggal_keluar', '<=', $sampai))
+                ->whereBetween('tanggal_keluar', [$dari, $sampai])
                 ->orderByDesc('tanggal_keluar')->get()
                 ->map(fn($k) => [
                     'tipe'       => 'keluar',
