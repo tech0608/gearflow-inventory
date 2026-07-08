@@ -122,9 +122,9 @@ erDiagram
 Buka peramban (browser) dan akses tautan live: **`https://www.garasifyy.site`**. Gunakan kredensial standar berikut:
 
 * **Akun Administrator (Akses Penuh):**
-  * **Username:** `admin` | **Password:** `password`
+  * **Username:** `admin` | **Password:** `admin123`
 * **Akun Staf Bengkel (Transaksi & Laporan):**
-  * **Username:** `staf` | **Password:** `password`
+  * **Username:** `budi` | **Password:** `budi123`
 
 ### B. Alur Kerja Pemindaian Barcode (Scan & Cari)
 1. Masuk ke menu **Data Barang**.
