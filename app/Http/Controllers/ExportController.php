@@ -11,18 +11,56 @@ use Illuminate\Http\Request;
 class ExportController extends Controller
 {
     // ─────────────────────────────────────────────────────────────────────────
-    // HELPER: tulis 1 baris CSV ke file handle
+    // HELPER: Bungkus data menjadi HTML Excel (xls format)
+    // Excel membaca HTML table sebagai spreadsheet sempurna:
+    // - Mendukung bold, warna, border, colspan, lebar kolom
+    // - Tanggal tidak berubah jadi #######
+    // - Tidak perlu library tambahan
     // ─────────────────────────────────────────────────────────────────────────
-    private function row($file, array $cols): void
+    private function excelHeader(string $filename): array
     {
-        fputcsv($file, $cols, ';');
+        return [
+            'Content-Type'        => 'application/vnd.ms-excel; charset=utf-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            'Pragma'              => 'no-cache',
+            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires'             => '0',
+        ];
     }
 
-    private function blank($file, int $n = 1): void
+    private function styleHead(): string
     {
-        for ($i = 0; $i < $n; $i++) {
-            fputcsv($file, [''], ';');
-        }
+        return '
+        <style>
+            body  { font-family: Calibri, Arial, sans-serif; font-size: 11pt; }
+            table { border-collapse: collapse; width: 100%; }
+            th    { background-color: #1e3a5f; color: #ffffff; font-weight: bold;
+                    border: 1px solid #aaa; padding: 6px 10px; white-space: nowrap; }
+            td    { border: 1px solid #ccc; padding: 5px 10px; vertical-align: top; }
+            .title     { font-size: 16pt; font-weight: bold; color: #1e3a5f; }
+            .subtitle  { font-size: 12pt; color: #444; }
+            .instansi  { font-size: 10pt; color: #777; }
+            .meta-label{ font-weight: bold; width: 160px; }
+            .meta-val  { }
+            .section   { background-color: #dbe9f4; font-weight: bold;
+                         color: #1e3a5f; padding: 5px 10px;
+                         border: 1px solid #aaa; }
+            .row-masuk { background-color: #f0fff4; }
+            .row-keluar{ background-color: #fff8f0; }
+            .row-kritis{ background-color: #fff0f0; }
+            .row-rendah{ background-color: #fffdf0; }
+            .row-aman  { background-color: #f0fff4; }
+            .badge-masuk  { color: #16a34a; font-weight: bold; }
+            .badge-keluar { color: #ea580c; font-weight: bold; }
+            .badge-kritis { color: #dc2626; font-weight: bold; }
+            .badge-rendah { color: #ca8a04; font-weight: bold; }
+            .badge-aman   { color: #16a34a; font-weight: bold; }
+            .num   { text-align: right; }
+            .center{ text-align: center; }
+            .summary-table th { background-color: #374151; }
+            .summary-table td { background-color: #f9fafb; font-weight: bold; }
+            .footer { color: #999; font-size: 9pt; font-style: italic; }
+        </style>';
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -30,93 +68,105 @@ class ExportController extends Controller
     // ─────────────────────────────────────────────────────────────────────────
     public function exportBarang()
     {
-        $barangs   = Barang::orderBy('kategori')->orderBy('nama_barang')->get();
-        $filename  = 'GearFlow_DataBarang_' . date('Ymd_Hi') . '.csv';
+        $barangs  = Barang::orderBy('kategori')->orderBy('nama_barang')->get();
+        $filename = 'GearFlow_DataBarang_' . date('Ymd_Hi') . '.xls';
 
-        $headers = [
-            'Content-Type'        => 'text/csv; charset=utf-8',
-            'Content-Disposition' => "attachment; filename={$filename}",
-            'Pragma'              => 'no-cache',
-            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
-            'Expires'             => '0',
-        ];
+        $totalNilai  = $barangs->sum('nilai_stok');
+        $totalUnit   = $barangs->sum('stok');
+        $jmlAman     = $barangs->where('status_stok', 'aman')->count();
+        $jmlRendah   = $barangs->where('status_stok', 'rendah')->count();
+        $jmlKritis   = $barangs->where('status_stok', 'kritis')->count();
 
-        $callback = function () use ($barangs) {
-            $f = fopen('php://output', 'w');
-            // BOM agar Excel bisa baca UTF-8 dengan benar
-            fprintf($f, chr(0xEF) . chr(0xBB) . chr(0xBF));
+        $html  = '<html xmlns:o="urn:schemas-microsoft-com:office:office" ';
+        $html .= 'xmlns:x="urn:schemas-microsoft-com:office:excel">';
+        $html .= '<head><meta charset="utf-8">' . $this->styleHead() . '</head><body>';
 
-            // ── BLOK JUDUL ────────────────────────────────────────────────
-            $this->row($f, ['GEARFLOW INVENTORY SYSTEM']);
-            $this->row($f, ['Laporan Master Data Inventaris Barang']);
-            $this->row($f, ['Bengkel Otomotif – Universitas Teknologi Bandung']);
-            $this->blank($f);
-            $this->row($f, ['Tanggal Cetak', date('d/m/Y H:i')]);
-            $this->row($f, ['Total Barang',  $barangs->count() . ' item']);
-            $this->row($f, ['Total Nilai Inventaris', 'Rp ' . number_format($barangs->sum('nilai_stok'), 0, ',', '.')]);
-            $this->blank($f, 2);
+        // ── HEADER LAPORAN ───────────────────────────────────────────────────
+        $html .= '<table style="border:none;margin-bottom:10px">';
+        $html .= '<tr><td style="border:none" class="title">GEARFLOW INVENTORY SYSTEM</td></tr>';
+        $html .= '<tr><td style="border:none" class="subtitle">Laporan Master Data Inventaris Barang</td></tr>';
+        $html .= '<tr><td style="border:none" class="instansi">Bengkel Otomotif &mdash; Universitas Teknologi Bandung</td></tr>';
+        $html .= '<tr><td style="border:none">&nbsp;</td></tr>';
+        $html .= '<tr>
+            <td style="border:none" class="meta-label">Tanggal Cetak</td>
+            <td style="border:none">: ' . date('d/m/Y H:i') . ' WIB</td>
+        </tr>';
+        $html .= '<tr>
+            <td style="border:none" class="meta-label">Total Item Barang</td>
+            <td style="border:none">: <b>' . $barangs->count() . ' item</b></td>
+        </tr>';
+        $html .= '<tr>
+            <td style="border:none" class="meta-label">Total Nilai Inventaris</td>
+            <td style="border:none">: <b>Rp ' . number_format($totalNilai, 0, ',', '.') . '</b></td>
+        </tr>';
+        $html .= '</table><br>';
 
-            // ── HEADER KOLOM ──────────────────────────────────────────────
-            $this->row($f, [
-                'No',
-                'Kode SKU',
-                'Nama Barang',
-                'Kategori',
-                'Stok Saat Ini',
-                'Batas Minimum',
-                'Harga Satuan (Rp)',
-                'Nilai Stok (Rp)',
-                'Status',
-            ]);
+        // ── TABEL DATA ───────────────────────────────────────────────────────
+        $html .= '<table>';
+        $html .= '<thead><tr>
+            <th class="center" style="width:40px">No</th>
+            <th style="width:120px">Kode SKU</th>
+            <th style="width:220px">Nama Barang</th>
+            <th style="width:120px">Kategori</th>
+            <th class="num" style="width:80px">Stok</th>
+            <th class="num" style="width:80px">Min. Stok</th>
+            <th class="num" style="width:140px">Harga Satuan (Rp)</th>
+            <th class="num" style="width:160px">Nilai Stok (Rp)</th>
+            <th class="center" style="width:100px">Status</th>
+        </tr></thead><tbody>';
 
-            // ── DATA BARIS ────────────────────────────────────────────────
-            $kategoriSebelumnya = null;
-            $no = 1;
-            foreach ($barangs as $b) {
-                // Pemisah antar kategori
-                if ($b->kategori !== $kategoriSebelumnya) {
-                    if ($kategoriSebelumnya !== null) {
-                        $this->blank($f);
-                    }
-                    $this->row($f, ['── ' . strtoupper($b->kategori) . ' ──']);
-                    $kategoriSebelumnya = $b->kategori;
-                }
-
-                $status = match(strtolower($b->status_stok)) {
-                    'kritis' => '⚠ KRITIS',
-                    'rendah' => '↓ RENDAH',
-                    default  => '✓ AMAN',
-                };
-
-                $this->row($f, [
-                    $no++,
-                    $b->kode_barang ?? '-',
-                    $b->nama_barang,
-                    $b->kategori,
-                    $b->stok,
-                    $b->stok_minimum ?: 5,
-                    number_format($b->harga_satuan, 0, ',', '.'),
-                    number_format($b->nilai_stok,   0, ',', '.'),
-                    $status,
-                ]);
+        $kategoriSebelumnya = null;
+        $no = 1;
+        foreach ($barangs as $b) {
+            // Baris pemisah antar kategori
+            if ($b->kategori !== $kategoriSebelumnya) {
+                $html .= '<tr><td colspan="9" class="section">&nbsp;&nbsp;&#9658; ' . strtoupper($b->kategori) . '</td></tr>';
+                $kategoriSebelumnya = $b->kategori;
             }
 
-            // ── BARIS SUMMARY ─────────────────────────────────────────────
-            $this->blank($f, 2);
-            $this->row($f, ['RINGKASAN']);
-            $this->row($f, ['Total Semua Barang',   '', $barangs->count() . ' item']);
-            $this->row($f, ['Total Unit Stok',       '', number_format($barangs->sum('stok'), 0, ',', '.') . ' unit']);
-            $this->row($f, ['Total Nilai Inventaris','', 'Rp ' . number_format($barangs->sum('nilai_stok'), 0, ',', '.')]);
-            $this->row($f, ['Barang Status AMAN',    '', $barangs->where('status_stok', 'aman')->count()   . ' item']);
-            $this->row($f, ['Barang Status RENDAH',  '', $barangs->where('status_stok', 'rendah')->count() . ' item']);
-            $this->row($f, ['Barang Status KRITIS',  '', $barangs->where('status_stok', 'kritis')->count() . ' item']);
+            $statusClass = match(strtolower($b->status_stok)) {
+                'kritis' => 'row-kritis',
+                'rendah' => 'row-rendah',
+                default  => 'row-aman',
+            };
+            $badgeClass = 'badge-' . strtolower($b->status_stok);
+            $statusLabel = match(strtolower($b->status_stok)) {
+                'kritis' => '&#9888; KRITIS',
+                'rendah' => '&#8595; RENDAH',
+                default  => '&#10003; AMAN',
+            };
 
-            fclose($f);
-        };
+            $html .= "<tr class=\"{$statusClass}\">
+                <td class=\"center\">{$no}</td>
+                <td>" . htmlspecialchars($b->kode_barang ?? '-') . "</td>
+                <td>" . htmlspecialchars($b->nama_barang) . "</td>
+                <td>" . htmlspecialchars($b->kategori) . "</td>
+                <td class=\"num\">" . number_format($b->stok, 0, ',', '.') . "</td>
+                <td class=\"num\">" . number_format($b->stok_minimum ?: 5, 0, ',', '.') . "</td>
+                <td class=\"num\">" . number_format($b->harga_satuan, 0, ',', '.') . "</td>
+                <td class=\"num\">" . number_format($b->nilai_stok, 0, ',', '.') . "</td>
+                <td class=\"center {$badgeClass}\">{$statusLabel}</td>
+            </tr>";
+            $no++;
+        }
+        $html .= '</tbody></table><br>';
 
-        ActivityLog::record('EXPORT', 'Mengunduh file CSV Master Data Barang');
+        // ── RINGKASAN ────────────────────────────────────────────────────────
+        $html .= '<table class="summary-table" style="width:480px">';
+        $html .= '<thead><tr><th colspan="3">RINGKASAN INVENTARIS</th></tr></thead><tbody>';
+        $html .= '<tr><td>Total Semua Barang</td><td class="num">' . $barangs->count() . ' item</td><td></td></tr>';
+        $html .= '<tr><td>Total Unit Stok</td><td class="num">' . number_format($totalUnit, 0, ',', '.') . ' unit</td><td></td></tr>';
+        $html .= '<tr><td>Total Nilai Inventaris</td><td class="num">Rp ' . number_format($totalNilai, 0, ',', '.') . '</td><td></td></tr>';
+        $html .= '<tr><td class="badge-aman">&#10003; Status AMAN</td><td class="num badge-aman">' . $jmlAman . ' item</td><td></td></tr>';
+        $html .= '<tr><td class="badge-rendah">&#8595; Status RENDAH</td><td class="num badge-rendah">' . $jmlRendah . ' item</td><td></td></tr>';
+        $html .= '<tr><td class="badge-kritis">&#9888; Status KRITIS</td><td class="num badge-kritis">' . $jmlKritis . ' item</td><td></td></tr>';
+        $html .= '</tbody></table><br>';
+        $html .= '<p class="footer">Laporan ini digenerate secara otomatis oleh GearFlow Inventory System &mdash; ' . date('d/m/Y H:i') . ' WIB</p>';
+        $html .= '</body></html>';
 
-        return response()->stream($callback, 200, $headers);
+        ActivityLog::record('EXPORT', 'Mengunduh file Excel Data Barang');
+
+        return response($html, 200, $this->excelHeader($filename));
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -164,95 +214,94 @@ class ExportController extends Controller
             $transaksi = $transaksi->concat($keluars);
         }
 
-        $transaksi = $transaksi->sortBy('tanggal')->values();
-
+        $transaksi   = $transaksi->sortBy('tanggal')->values();
         $totalMasuk  = $transaksi->where('tipe', 'MASUK')->sum('jumlah');
         $totalKeluar = $transaksi->where('tipe', 'KELUAR')->sum('jumlah');
-        $jumlahTipe  = match($tipe) {
+        $selisih     = $totalMasuk - $totalKeluar;
+
+        $judulTipe = match($tipe) {
             'masuk'  => 'Barang Masuk',
             'keluar' => 'Barang Keluar',
-            default  => 'Semua Transaksi',
+            default  => 'Semua Transaksi (Masuk & Keluar)',
         };
 
-        $filename = 'GearFlow_Laporan_Transaksi_' . date('Ymd_Hi') . '.csv';
+        $filename = 'GearFlow_LaporanTransaksi_' . date('Ymd_Hi') . '.xls';
 
-        $headers = [
-            'Content-Type'        => 'text/csv; charset=utf-8',
-            'Content-Disposition' => "attachment; filename={$filename}",
-            'Pragma'              => 'no-cache',
-            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
-            'Expires'             => '0',
-        ];
+        $html  = '<html xmlns:o="urn:schemas-microsoft-com:office:office" ';
+        $html .= 'xmlns:x="urn:schemas-microsoft-com:office:excel">';
+        $html .= '<head><meta charset="utf-8">' . $this->styleHead() . '</head><body>';
 
-        $callback = function () use ($transaksi, $dari, $sampai, $jumlahTipe, $totalMasuk, $totalKeluar) {
-            $f = fopen('php://output', 'w');
-            fprintf($f, chr(0xEF) . chr(0xBB) . chr(0xBF));
+        // ── HEADER LAPORAN ───────────────────────────────────────────────────
+        $html .= '<table style="border:none;margin-bottom:10px">';
+        $html .= '<tr><td style="border:none" class="title">GEARFLOW INVENTORY SYSTEM</td></tr>';
+        $html .= '<tr><td style="border:none" class="subtitle">Laporan Riwayat Transaksi &mdash; ' . $judulTipe . '</td></tr>';
+        $html .= '<tr><td style="border:none" class="instansi">Bengkel Otomotif &mdash; Universitas Teknologi Bandung</td></tr>';
+        $html .= '<tr><td style="border:none">&nbsp;</td></tr>';
+        $html .= '<tr><td style="border:none" class="meta-label">Tanggal Cetak</td><td style="border:none">: ' . date('d/m/Y H:i') . ' WIB</td></tr>';
+        $html .= '<tr><td style="border:none" class="meta-label">Periode Laporan</td><td style="border:none">: <b>' . date('d/m/Y', strtotime($dari)) . ' s/d ' . date('d/m/Y', strtotime($sampai)) . '</b></td></tr>';
+        $html .= '<tr><td style="border:none" class="meta-label">Total Transaksi</td><td style="border:none">: <b>' . $transaksi->count() . ' transaksi</b></td></tr>';
+        $html .= '<tr><td style="border:none" class="meta-label">Total Masuk</td><td style="border:none">: <b class="badge-masuk">+' . number_format($totalMasuk, 0, ',', '.') . ' unit</b></td></tr>';
+        $html .= '<tr><td style="border:none" class="meta-label">Total Keluar</td><td style="border:none">: <b class="badge-keluar">-' . number_format($totalKeluar, 0, ',', '.') . ' unit</b></td></tr>';
+        $html .= '</table><br>';
 
-            // ── BLOK JUDUL ────────────────────────────────────────────────
-            $this->row($f, ['GEARFLOW INVENTORY SYSTEM']);
-            $this->row($f, ['Laporan Riwayat Transaksi – ' . $jumlahTipe]);
-            $this->row($f, ['Bengkel Otomotif – Universitas Teknologi Bandung']);
-            $this->blank($f);
-            $this->row($f, ['Tanggal Cetak',      date('d/m/Y H:i')]);
-            $this->row($f, ['Periode Laporan',    date('d/m/Y', strtotime($dari)) . ' s/d ' . date('d/m/Y', strtotime($sampai))]);
-            $this->row($f, ['Total Transaksi',    $transaksi->count() . ' transaksi']);
-            $this->row($f, ['Total Masuk',        number_format($totalMasuk, 0, ',', '.') . ' unit']);
-            $this->row($f, ['Total Keluar',       number_format($totalKeluar, 0, ',', '.') . ' unit']);
-            $this->blank($f, 2);
+        // ── TABEL DATA ───────────────────────────────────────────────────────
+        $html .= '<table>';
+        $html .= '<thead><tr>
+            <th class="center" style="width:40px">No</th>
+            <th class="center" style="width:90px">Tanggal</th>
+            <th class="center" style="width:90px">Jenis</th>
+            <th style="width:110px">Kode SKU</th>
+            <th style="width:220px">Nama Barang</th>
+            <th style="width:110px">Kategori</th>
+            <th style="width:220px">Keterangan</th>
+            <th class="num" style="width:100px">Jumlah (Unit)</th>
+        </tr></thead><tbody>';
 
-            // ── HEADER KOLOM ──────────────────────────────────────────────
-            $this->row($f, [
-                'No',
-                'Tanggal',
-                'Jenis',
-                'Kode SKU',
-                'Nama Barang',
-                'Kategori',
-                'Keterangan',
-                'Jumlah (Unit)',
-            ]);
-
-            // ── DATA BARIS ────────────────────────────────────────────────
-            if ($transaksi->isEmpty()) {
-                $this->row($f, ['', '', '', '', 'Tidak ada data pada periode ini.']);
-            } else {
-                $tanggalSebelumnya = null;
-                foreach ($transaksi as $i => $t) {
-                    // Pemisah antar hari
-                    if ($t['tanggal'] !== $tanggalSebelumnya) {
-                        if ($tanggalSebelumnya !== null) {
-                            $this->blank($f);
-                        }
-                        $tanggalSebelumnya = $t['tanggal'];
-                    }
-
-                    $this->row($f, [
-                        $i + 1,
-                        $t['tanggal'],
-                        $t['tipe'],
-                        $t['sku'],
-                        $t['barang'],
-                        $t['kategori'],
-                        $t['keterangan'],
-                        ($t['tipe'] === 'MASUK' ? '+' : '-') . $t['jumlah'],
-                    ]);
+        if ($transaksi->isEmpty()) {
+            $html .= '<tr><td colspan="8" style="text-align:center;color:#999;padding:20px">
+                Tidak ada data transaksi pada periode ini.
+            </td></tr>';
+        } else {
+            $tanggalSebelumnya = null;
+            foreach ($transaksi as $i => $t) {
+                // Baris pemisah antar hari
+                if ($t['tanggal'] !== $tanggalSebelumnya) {
+                    $html .= '<tr><td colspan="8" class="section">&nbsp;&nbsp;&#9656; ' . $t['tanggal'] . '</td></tr>';
+                    $tanggalSebelumnya = $t['tanggal'];
                 }
+
+                $rowClass   = $t['tipe'] === 'MASUK' ? 'row-masuk' : 'row-keluar';
+                $badgeClass = $t['tipe'] === 'MASUK' ? 'badge-masuk' : 'badge-keluar';
+                $badgeLabel = $t['tipe'] === 'MASUK' ? '&#8593; MASUK' : '&#8595; KELUAR';
+                $jumlahStr  = ($t['tipe'] === 'MASUK' ? '+' : '-') . number_format($t['jumlah'], 0, ',', '.');
+
+                $html .= "<tr class=\"{$rowClass}\">
+                    <td class=\"center\">" . ($i + 1) . "</td>
+                    <td class=\"center\">" . htmlspecialchars($t['tanggal']) . "</td>
+                    <td class=\"center {$badgeClass}\">{$badgeLabel}</td>
+                    <td>" . htmlspecialchars($t['sku']) . "</td>
+                    <td>" . htmlspecialchars($t['barang']) . "</td>
+                    <td>" . htmlspecialchars($t['kategori']) . "</td>
+                    <td>" . htmlspecialchars($t['keterangan']) . "</td>
+                    <td class=\"num {$badgeClass}\">{$jumlahStr}</td>
+                </tr>";
             }
+        }
 
-            // ── BARIS SUMMARY ─────────────────────────────────────────────
-            $this->blank($f, 2);
-            $this->row($f, ['RINGKASAN PERIODE']);
-            $this->row($f, ['Total Transaksi Masuk',  '', $transaksi->where('tipe','MASUK')->count()  . ' transaksi', '', '+' . number_format($totalMasuk,  0, ',', '.') . ' unit']);
-            $this->row($f, ['Total Transaksi Keluar', '', $transaksi->where('tipe','KELUAR')->count() . ' transaksi', '', '-' . number_format($totalKeluar, 0, ',', '.') . ' unit']);
-            $this->row($f, ['Selisih Stok Bersih',    '', '',                                                          '', ($totalMasuk - $totalKeluar >= 0 ? '+' : '') . number_format($totalMasuk - $totalKeluar, 0, ',', '.') . ' unit']);
-            $this->blank($f);
-            $this->row($f, ['-- Laporan ini digenerate secara otomatis oleh GearFlow Inventory System --']);
+        $html .= '</tbody></table><br>';
 
-            fclose($f);
-        };
+        // ── RINGKASAN ────────────────────────────────────────────────────────
+        $html .= '<table class="summary-table" style="width:480px">';
+        $html .= '<thead><tr><th colspan="2">RINGKASAN PERIODE</th></tr></thead><tbody>';
+        $html .= '<tr><td>Transaksi Barang Masuk</td><td class="num badge-masuk">' . $transaksi->where('tipe','MASUK')->count() . ' transaksi &nbsp;|&nbsp; +' . number_format($totalMasuk, 0, ',', '.') . ' unit</td></tr>';
+        $html .= '<tr><td>Transaksi Barang Keluar</td><td class="num badge-keluar">' . $transaksi->where('tipe','KELUAR')->count() . ' transaksi &nbsp;|&nbsp; -' . number_format($totalKeluar, 0, ',', '.') . ' unit</td></tr>';
+        $html .= '<tr><td>Selisih Stok Bersih</td><td class="num ' . ($selisih >= 0 ? 'badge-aman' : 'badge-kritis') . '">' . ($selisih >= 0 ? '+' : '') . number_format($selisih, 0, ',', '.') . ' unit</td></tr>';
+        $html .= '</tbody></table><br>';
+        $html .= '<p class="footer">Laporan ini digenerate secara otomatis oleh GearFlow Inventory System &mdash; ' . date('d/m/Y H:i') . ' WIB</p>';
+        $html .= '</body></html>';
 
-        ActivityLog::record('EXPORT', "Mengunduh CSV Laporan Transaksi ({$dari} s/d {$sampai})");
+        ActivityLog::record('EXPORT', "Mengunduh Excel Laporan Transaksi ({$dari} s/d {$sampai})");
 
-        return response()->stream($callback, 200, $headers);
+        return response($html, 200, $this->excelHeader($filename));
     }
 }
