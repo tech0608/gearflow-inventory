@@ -54,7 +54,7 @@ Sistem ini melampaui standar aplikasi manajemen biasa dengan menyertakan fitur-f
 
 ## 4. 🗄️ Struktur Database (Entity Relationship)
 
-Sistem dirancang menggunakan 6 tabel utama dengan kesepadanan nomenklatur standar Inggris (`items`/`products`, `suppliers`, `incoming_items`, `outgoing_items`, `users`, `activity_logs`) yang saling berelasi:
+Sistem dirancang menggunakan 6 tabel utama yang saling berelasi:
 
 ```mermaid
 erDiagram

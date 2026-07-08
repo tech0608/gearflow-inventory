@@ -110,12 +110,12 @@ Proyek ini telah dilengkapi dengan konfigurasi siap pakai untuk hosting/server L
 
 ## 📁 Struktur Tabel Database (Database Schema)
 
-Sistem menggunakan skema relasional dengan 6 tabel utama bernomenklatur standar Inggris:
-1. `items` *(atau `products`)* — Menyimpan katalog inventaris suku cadang, kode SKU, spesifikasi harga, dan batas stok minimum.
-2. `suppliers` — Menyimpan data mitra penyedia dan distributor barang.
-3. `incoming_items` *(atau `stock_ins`)* — Riwayat transaksi penerimaan barang masuk dari pemasok.
-4. `outgoing_items` *(atau `stock_outs`)* — Riwayat transaksi pemakaian barang keluar untuk servis kendaraan.
-5. `users` — Menyimpan data autentikasi, hak akses (RBAC Admin/Staf), dan profil pengguna.
+Sistem menggunakan skema relasional dengan 6 tabel utama yang saling berelasi:
+1. `barangs` — Menyimpan katalog inventaris suku cadang, kode SKU barcode, harga, dan batas stok minimum.
+2. `pemasoks` — Menyimpan direktori mitra penyedia dan distributor barang.
+3. `barang_masuks` — Mencatat riwayat transaksi penerimaan barang masuk dari pemasok.
+4. `barang_keluars` — Mencatat riwayat transaksi pemakaian barang keluar untuk servis kendaraan.
+5. `penggunas` — Menyimpan data autentikasi login dan hak akses pengguna (RBAC Admin & Staf).
 6. `activity_logs` — Jurnal audit (Audit Trail) untuk memantau seluruh jejak aktivitas pengguna di dalam sistem.
 
 ---
