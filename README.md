@@ -108,14 +108,15 @@ Proyek ini telah dilengkapi dengan konfigurasi siap pakai untuk hosting/server L
 
 ---
 
-## 📁 Struktur Tabel Utama
+## 📁 Struktur Tabel Database (Database Schema)
 
-1. `barangs` — Menyimpan katalog inventaris, SKU, harga, dan batas stok minimum.
-2. `pemasoks` — Menyimpan data mitra penyedia barang.
-3. `barang_masuks` — Riwayat transaksi masuk dan relasi pemasok.
-4. `barang_keluars` — Riwayat transaksi keluar dan keterangan penggunaan.
-5. `penggunas` — Menyimpan autentikasi, role admin/staf, dan email notifikasi.
-6. `activity_logs` — Jurnal audit aktivitas sistem.
+Sistem menggunakan skema relasional dengan 6 tabel utama bernomenklatur standar Inggris:
+1. `items` *(atau `products`)* — Menyimpan katalog inventaris suku cadang, kode SKU, spesifikasi harga, dan batas stok minimum.
+2. `suppliers` — Menyimpan data mitra penyedia dan distributor barang.
+3. `incoming_items` *(atau `stock_ins`)* — Riwayat transaksi penerimaan barang masuk dari pemasok.
+4. `outgoing_items` *(atau `stock_outs`)* — Riwayat transaksi pemakaian barang keluar untuk servis kendaraan.
+5. `users` — Menyimpan data autentikasi, hak akses (RBAC Admin/Staf), dan profil pengguna.
+6. `activity_logs` — Jurnal audit (Audit Trail) untuk memantau seluruh jejak aktivitas pengguna di dalam sistem.
 
 ---
 *Dikembangkan untuk memenuhi Tugas Perancangan Sistem Inventaris — Universitas Teknologi Bandung.*
