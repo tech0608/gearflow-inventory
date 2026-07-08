@@ -35,14 +35,30 @@ Sistem informasi manajemen inventaris suku cadang, alat kerja, dan bahan habis p
 
 ---
 
+## 📸 Tangkapan Layar (Screenshots)
+
+### 1. Halaman Login Modern (Dark Mode)
+![Halaman Login](screenshots/01_login_page.png)
+
+### 2. Dashboard Analisis & Grafik Interaktif
+![Dashboard Utama](screenshots/02_dashboard.png)
+
+### 3. Pemindai Barcode & QR Code (WebRTC Camera Scanner)
+![Barcode Scanner](screenshots/04_barcode_scanner.png)
+
+### 4. Manajemen Data Barang & Stok Minimum
+![Data Barang](screenshots/03_data_barang.png)
+
+---
+
 ## 🔑 Akun Default (Seeder)
 
 Setelah melakukan instalasi database (`php artisan migrate --seed`), Anda dapat login menggunakan akun berikut:
 
 | Role | Username | Password | Keterangan |
 | :--- | :--- | :--- | :--- |
-| **Administrator** | `admin` | `password` | Akses penuh seluruh modul & manajemen pengguna |
-| **Staf Bengkel** | `staf` | `password` | Akses transaksi & laporan tanpa manajemen akun |
+| **Administrator** | `admin` | `admin123` | Akses penuh seluruh modul & manajemen pengguna |
+| **Staf Bengkel** | `budi` | `budi123` | Akses transaksi & laporan tanpa manajemen akun |
 
 ---
 
