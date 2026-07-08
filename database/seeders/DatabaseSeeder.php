@@ -23,9 +23,16 @@ class DatabaseSeeder extends Seeder
         ]);
 
         Pengguna::create([
-            'nama_pengguna' => 'Budi Santoso',
-            'username'      => 'budi',
-            'password'      => Hash::make('budi123'),
+            'nama_pengguna' => 'Staff Bengkel',
+            'username'      => 'staff',
+            'password'      => Hash::make('password'),
+            'role'          => 'staf',
+        ]);
+
+        Pengguna::create([
+            'nama_pengguna' => 'Staff Operasional',
+            'username'      => 'staf',
+            'password'      => Hash::make('password'),
             'role'          => 'staf',
         ]);
 

@@ -8,7 +8,7 @@
   <meta name="description" content="Sistem Inventaris Barang Bengkel – Kelola stok, transaksi, dan laporan dengan aman.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=2.0">
   <script>
     if (localStorage.getItem('theme') === 'light') {
       document.documentElement.classList.add('light-mode');

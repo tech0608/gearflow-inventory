@@ -58,7 +58,7 @@ Setelah melakukan instalasi database (`php artisan migrate --seed`), Anda dapat 
 | Role | Username | Password | Keterangan |
 | :--- | :--- | :--- | :--- |
 | **Administrator** | `admin` | `admin123` | Akses penuh seluruh modul & manajemen pengguna |
-| **Staf Bengkel** | `budi` | `budi123` | Akses transaksi & laporan tanpa manajemen akun |
+| **Staf Bengkel** | `staff` | `password` | Akses transaksi & laporan tanpa manajemen akun |
 
 ---
 

@@ -1193,3 +1193,17 @@ html.light-mode .page-title h1 {
   margin: 20px auto; display: inline-block;
   box-shadow: var(--shadow-sm);
 }
+
+/* ================================================================
+   FINAL SCROLLING GUARANTEE
+   ================================================================ */
+html, body {
+  height: auto !important;
+  min-height: 100% !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+.main-wrapper, .content {
+  overflow: visible !important;
+  height: auto !important;
+}

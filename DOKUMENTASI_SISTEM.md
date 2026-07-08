@@ -124,7 +124,7 @@ Buka peramban (browser) dan akses tautan live: **`https://www.garasifyy.site`**.
 * **Akun Administrator (Akses Penuh):**
   * **Username:** `admin` | **Password:** `admin123`
 * **Akun Staf Bengkel (Transaksi & Laporan):**
-  * **Username:** `budi` | **Password:** `budi123`
+  * **Username:** `staff` | **Password:** `password`
 
 ### B. Alur Kerja Pemindaian Barcode (Scan & Cari)
 1. Masuk ke menu **Data Barang**.

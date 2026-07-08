@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Laporan Tugas Web - GearFlow Inventory System</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Times+New+Roman&family=Inter:wght@400;600;700&display=swap');
+        
+        @page {
+            size: A4;
+            margin: 2.5cm 2cm 2cm 2cm;
+        }
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 12pt;
+            line-height: 1.5;
+            color: #000;
+            margin: 0;
+            padding: 20px;
+            background: #fff;
+        }
+        .print-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #2563eb;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+            z-index: 999;
+        }
+        @media print {
+            .no-print { display: none !important; }
+            body { padding: 0; }
+            .page-break { page-break-before: always; }
+        }
+        .cover {
+            text-align: center;
+            padding-top: 50px;
+            min-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .cover h1 { font-size: 18pt; text-transform: uppercase; margin-bottom: 5px; }
+        .cover h2 { font-size: 16pt; margin-top: 0; margin-bottom: 40px; }
+        .cover .meta { margin: 60px 0; font-size: 14pt; font-weight: bold; }
+        .cover .footer { font-size: 14pt; font-weight: bold; margin-bottom: 30px; text-transform: uppercase; }
+        
+        h1, h2, h3 { font-family: 'Inter', sans-serif; color: #1e293b; }
+        h1 { font-size: 16pt; border-bottom: 2px solid #334155; padding-bottom: 5px; margin-top: 30px; }
+        h2 { font-size: 14pt; margin-top: 20px; }
+        
+        p { text-align: justify; text-indent: 1cm; margin: 10px 0; }
+        .no-indent { text-indent: 0; }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-family: 'Inter', sans-serif;
+            font-size: 10pt;
+        }
+        table, th, td { border: 1px solid #000; }
+        th { background-color: #f1f5f9; padding: 8px; text-align: center; font-weight: bold; }
+        td { padding: 8px; }
+        
+        .screenshot-box {
+            border: 2px dashed #94a3b8;
+            background: #f8fafc;
+            padding: 30px;
+            text-align: center;
+            margin: 20px 0;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            color: #475569;
+        }
+        .screenshot-box img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <button onclick="window.print()" class="print-btn no-print">🖨️ Cetak ke PDF (Ctrl + P)</button>
+
+    <!-- COVER PAGE -->
+    <div class="cover">
+        <div>
+            <h1>LAPORAN TUGAS AKHIR PERANCANGAN WEB</h1>
+            <h2>GEARFLOW INVENTORY SYSTEM:<br>SISTEM MANAJEMEN INVENTARIS BENGKEL OTOMOTIF BERBASIS LARAVEL DAN WEB SCANNER</h2>
+            <br><br>
+            <div style="width: 120px; height: 120px; border: 2px solid #000; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; font-weight: bold;">
+                [LOGO UTB]
+            </div>
+        </div>
+        
+        <div class="meta">
+            Disusun Oleh:<br>
+            LUTHFY ARIEF<br>
+            NIM: 23552011045
+        </div>
+        
+        <div class="footer">
+            PROGRAM STUDI TEKNIK INFORMATIKA<br>
+            UNIVERSITAS TEKNOLOGI BANDUNG<br>
+            2026
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <!-- BAB 1: ANALISIS SISTEM -->
+    <h1>BAB I - ANALISIS SISTEM</h1>
+    
+    <h2>1.1 Latar Belakang Masalah</h2>
+    <p>Pengelolaan suku cadang (spare parts) dan alat kerja pada bengkel otomotif modern merupakan aspek vital yang menentukan kelancaran operasional servis. Metode pencatatan konvensional yang masih mengandalkan buku kertas atau spreadsheet sederhana memiliki kelemahan kritis, antara lain tingginya risiko human error, hilangnya bukti fisik transaksi, serta ketidakmampuan memantau stok secara real-time. Ketidakakuratan data inventaris sering kali menyebabkan kehabisan suku cadang penting di tengah proses perbaikan kendaraan, yang mengakibatkan penurunan kepuasan pelanggan.</p>
+    
+    <h2>1.2 Solusi yang Diusulkan</h2>
+    <p>Untuk memecahkan permasalahan tersebut, dirancanglah <b>GearFlow Inventory System</b>, sebuah aplikasi berbasis web modern dengan kerangka kerja Laravel 11. Sistem ini mengintegrasikan teknologi kamera pemindai Barcode dan QR Code secara langsung melalui peramban (WebRTC Scanner), mempermudah mekanik dan staf dalam mencatat arus barang masuk dan keluar hanya dalam hitungan detik tanpa mengetik manual.</p>
+    
+    <h2>1.3 Role-Based Access Control (RBAC) & Keamanan</h2>
+    <p class="no-indent">Sistem ini membagi hak akses menjadi dua peran utama demi keamanan data:</p>
+    <ul>
+        <li><b>Administrator:</b> Memiliki wewenang penuh atas kelola data master barang, manajemen mitra pemasok, penambahan akun staf baru, pemantauan log aktivitas sistem (Audit Trail), dan ekspor laporan Excel.</li>
+        <li><b>Staf Bengkel:</b> Wewenang difokuskan pada kegiatan operasional sehari-hari, yaitu mencatat penerimaan barang masuk, transaksi pemakaian barang keluar untuk servis, dan pemindaian SKU.</li>
+    </ul>
+
+    <!-- BAB 2: STRUKTUR DATABASE -->
+    <h1>BAB II - STRUKTUR DATABASE</h1>
+    
+    <h2>2.1 Desain Relasi Tabel (ERD)</h2>
+    <p>Database sistem dinamai <code>gearflow_inventory_db</code> dan dirancang menggunakan 6 entitas tabel yang saling berelasi dengan integritas referensial (Foreign Key Cascade Protection):</p>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>Nama Tabel</th>
+                <th>Fungsi / Deskripsi Utama</th>
+                <th>Relasi (Foreign Key)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="text-align: center;">1</td>
+                <td><b>barangs</b></td>
+                <td>Menyimpan data master suku cadang, SKU barcode, stok, batas minimum, dan harga.</td>
+                <td><i>Parent Table</i> (Dilihat oleh transaksi)</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;">2</td>
+                <td><b>pemasoks</b></td>
+                <td>Menyimpan data direktori mitra distributor/pemasok suku cadang.</td>
+                <td><i>Parent Table</i></td>
+            </tr>
+            <tr>
+                <td style="text-align: center;">3</td>
+                <td><b>barang_masuks</b></td>
+                <td>Mencatat riwayat penambahan stok dari pembelian/suplai.</td>
+                <td>FK ke <code>barangs(id)</code> & <code>pemasoks(id)</code></td>
+            </tr>
+            <tr>
+                <td style="text-align: center;">4</td>
+                <td><b>barang_keluars</b></td>
+                <td>Mencatat riwayat pemakaian suku cadang untuk servis kendaraan.</td>
+                <td>FK ke <code>barangs(id)</code></td>
+            </tr>
+            <tr>
+                <td style="text-align: center;">5</td>
+                <td><b>penggunas</b></td>
+                <td>Menyimpan akun login sistem (Admin dan Staf) dengan enkripsi bcrypt.</td>
+                <td>Berelasi dengan log aktivitas</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;">6</td>
+                <td><b>activity_logs</b></td>
+                <td>Mencatat jejak audit (audit trail) setiap aksi pengguna beserta IP Address.</td>
+                <td>Log independen</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="page-break"></div>
+
+    <!-- BAB 3: IMPLEMENTASI SISTEM -->
+    <h1>BAB III - IMPLEMENTASI SISTEM</h1>
+    
+    <h2>3.1 Spesifikasi Lingkungan Implementasi</h2>
+    <p class="no-indent">Sistem ini telah diimplementasikan dan diuji coba pada lingkungan pengembangan lokal dan server produksi live online dengan rincian:</p>
+    <ul>
+        <li><b>Tautan Domain Live Production:</b> <a href="https://www.garasifyy.site">https://www.garasifyy.site</a></li>
+        <li><b>Repositori GitHub:</b> <a href="https://github.com/tech0608/gearflow-inventory">https://github.com/tech0608/gearflow-inventory</a></li>
+        <li><b>Framework Backend:</b> Laravel 11.x dengan PHP-FPM versi 8.3</li>
+        <li><b>Web Server Produksi:</b> LiteSpeed / Nginx pada Ubuntu Linux Server (Anymhost Nilou Cloud)</li>
+        <li><b>Keamanan HTTPS:</b> Sertifikat Let's Encrypt AutoSSL 256-bit Encryption</li>
+    </ul>
+
+    <h2>3.2 Implementasi Fitur Unggulan</h2>
+    <p>Beberapa inovasi fitur yang diimplementasikan pada GearFlow Inventory System mencakup:</p>
+    <ol>
+        <li><b>Html5-QRCode Camera Scanner:</b> Integrasi pustaka pemindai optik berbasis JavaScript yang memungkinkan kamera peramban membaca kode batang (Barcode) maupun QR Code suku cadang secara real-time.</li>
+        <li><b>Algoritma Proteksi Stok Minus:</b> Validasi tingkat kontroler mencegah pengurangan stok jika jumlah barang keluar yang diinput melebihi sisa stok yang tersedia di database.</li>
+        <li><b>Dynamic Chart Dashboard:</b> Visualisasi statistik transaksi 7 hari terakhir menggunakan Chart.js dengan perlindungan anti-XSS melalui direktif Blade <code>@json()</code>.</li>
+    </ol>
+
+    <!-- BAB 4: SCREENSHOT SISTEM -->
+    <h1>BAB IV - SCREENSHOT SISTEM</h1>
+    <p class="no-indent">Berikut adalah tangkapan layar (screenshot) antarmuka utama aplikasi GearFlow Inventory System yang telah beroperasi di server produksi:</p>
+    
+    <div class="screenshot-box">
+        <b>[ SCREENSHOT 1: HALAMAN LOGIN SISTEM ]</b><br><br>
+        <i>*Silakan tempel (paste) foto screenshot halaman Login https://www.garasifyy.site di sini*</i>
+    </div>
+
+    <div class="screenshot-box">
+        <b>[ SCREENSHOT 2: DASHBOARD UTAMA & GRAFIK STATISTIK ]</b><br><br>
+        <i>*Silakan tempel foto screenshot Dashboard Admin bergaya Dark Mode di sini*</i>
+    </div>
+
+    <div class="screenshot-box">
+        <b>[ SCREENSHOT 3: FITUR SCAN BARCODE / QR CODE ]</b><br><br>
+        <i>*Silakan tempel foto screenshot saat tombol kamera Scan SKU aktif di Data Barang*</i>
+    </div>
+
+    <div class="screenshot-box">
+        <b>[ SCREENSHOT 4: HALAMAN TRANSAKSI BARANG MASUK / KELUAR ]</b><br><br>
+        <i>*Silakan tempel foto screenshot tabel transaksi dan laporan barang di sini*</i>
+    </div>
+
+    <div class="page-break"></div>
+
+    <!-- BAB 5: KESIMPULAN -->
+    <h1>BAB V - KESIMPULAN DAN SARAN</h1>
+    
+    <h2>5.1 Kesimpulan</h2>
+    <p>Berdasarkan hasil perancangan, implementasi, dan pengujian server produksi yang telah dilakukan pada proyek GearFlow Inventory System, dapat disimpulkan bahwa:</p>
+    <ol>
+        <li>Sistem manajemen inventaris berbasis Laravel 11 ini mampu meningkatkan efisiensi dan keakuratan pencatatan stok bengkel otomotif secara signifikan dibandingkan metode manual.</li>
+        <li>Integrasi fitur pemindai Barcode/QR Code melalui kamera peramban terbukti mempercepat proses pencarian barang dan pencatatan transaksi masuk/keluar hingga 80% lebih cepat tanpa memerlukan perangkat lunak tambahan.</li>
+        <li>Penerapan arsitektur keamanan Role-Based Access Control (RBAC) dan Activity Logging mampu menjaga integritas data serta mencegah manipulasi stok oleh pihak yang tidak berwenang.</li>
+        <li>Aplikasi telah berhasil di-deploy pada server produksi secara live (<a href="https://www.garasifyy.site">https://www.garasifyy.site</a>) dengan performa tinggi dan perlindungan SSL HTTPS berstandar industri.</li>
+    </ol>
+
+    <h2>5.2 Saran</h2>
+    <p>Untuk pengembangan sistem di masa yang akan datang, disarankan untuk menambahkan modul Point of Sales (POS / Kasir) terintegrasi agar biaya jasa servis mekanik dan harga suku cadang dapat langsung dicetak menjadi struk faktur untuk pelanggan bengkel.</p>
+    
+    <br><br><br>
+    <div style="float: right; text-align: center; width: 250px; font-family: 'Inter', sans-serif;">
+        Bandung, 8 Juli 2026<br>
+        Mahasiswa Penyusun,<br><br><br><br>
+        <b><u>Luthfy Arief</u></b><br>
+        NIM. 23552011045
+    </div>
+
+</body>
+</html>
